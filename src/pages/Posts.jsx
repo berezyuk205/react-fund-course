@@ -87,9 +87,9 @@ function Posts() {
       {postError &&
       <h1>Ошибка сервера ${postError}</h1>
       }
-      {isPostsLoading
-        ? <div style={{display: 'flex', justifyContent: 'center', marginTop: '20px'}}><Loader/></div>
-        : <PostList remove={removePost} posts={sortedAndSearchedPosts} title={"Авто"}/>
+      <PostList remove={removePost} posts={sortedAndSearchedPosts} title={"Авто"}/>
+      {isPostsLoading &&
+        <div style={{display: 'flex', justifyContent: 'center', marginTop: '20px'}}><Loader/></div>
       }
       <Pagination
         page={page}
