@@ -16,6 +16,7 @@ import Loader from "../components/UI/Loader/Loader";
 import {useFetching} from "../hooks/useFetching";
 import {getPageCount, getPagesArray} from "../utils/pages";
 import Pagination from "../components/UI/pagination/Pagination";
+import {useObserver} from "../hooks/useObserver";
 
 function Posts() {
 
@@ -30,9 +31,10 @@ function Posts() {
   const [limit, setLimit] = useState(10)
   const [page, setPage] = useState(1)
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query)
+  const lastElement = useRef()
   const [fetchPosts, isPostsLoading, postError] = useFetching(async () => {
     const response = await PostService.getAll(limit, page);
-    setPosts(response.data);
+    setPosts([...posts, ...response.data]);
     const totalCount = response.headers["x-total-count"]
     setTotalPages(getPageCount(totalCount, limit))
   })
@@ -41,10 +43,13 @@ function Posts() {
   // const [selectedSort, setSelectedSort] = useState('')
   // const [searchQuery, setSearchQuery] = useState('')
 
+  useObserver(lastElement, page < totalPages, isPostsLoading, () => {
+    setPage(page+1)
+  })
 
   useEffect(() => {
     fetchPosts()
-  }, [page])
+  }, [page, limit])
 
 
   const createPost = (newPost) => {
@@ -63,7 +68,6 @@ function Posts() {
   // }
 
   const removePost = (post) => {
-    console.log(post)
     setPosts(posts.filter(p => p.id !== post.id))
   }
 
@@ -84,10 +88,21 @@ function Posts() {
         filter={filter}
         setFilter={setFilter}
       />
+      <MySelect
+        value={limit}
+        onChange={value => setLimit(value)}
+        defaultValue={'Количество элементов на странице'}
+        options={[
+          {value: 5, name:'5'},
+          {value: 10, name:'10'},
+          {value: 20, name:'20'},
+        ]}
+      />
       {postError &&
       <h1>Ошибка сервера ${postError}</h1>
       }
       <PostList remove={removePost} posts={sortedAndSearchedPosts} title={"Авто"}/>
+      <div ref={lastElement} style={{height:20, background:'red'}}></div>
       {isPostsLoading &&
         <div style={{display: 'flex', justifyContent: 'center', marginTop: '20px'}}><Loader/></div>
       }
